@@ -11,8 +11,12 @@ user_uploads = {}
 
 def load_links():
     if os.path.exists(LINKS_FILE):
-        with open(LINKS_FILE, 'r') as f:
-            return json.load(f)
+        try:
+            with open(LINKS_FILE, 'r') as f:
+                return json.load(f)
+        except (json.JSONDecodeError, ValueError):
+            print("Warning: links.json is empty or corrupted. Starting with an empty dictionary.")
+            return {}
     return {}
 
 def save_links():
@@ -21,8 +25,12 @@ def save_links():
 
 def load_user_uploads():
     if os.path.exists(USER_UPLOADS_FILE):
-        with open(USER_UPLOADS_FILE, 'r') as f:
-            return json.load(f)
+        try:
+            with open(USER_UPLOADS_FILE, 'r') as f:
+                return json.load(f)
+        except (json.JSONDecodeError, ValueError):
+            print("Warning: user_uploads.json is empty or corrupted. Starting with an empty dictionary.")
+            return {}
     return {}
 
 def save_user_uploads():
@@ -32,7 +40,6 @@ def save_user_uploads():
 def generate_link():
     return ''.join(random.choices(string.ascii_letters + string.digits, k=8))
 
-# Routes
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -47,7 +54,7 @@ def upload_file():
         file.save(filepath)
 
         link_to_filename[link] = filename
-        save_links()
+        save_links() 
 
         user_ip = request.remote_addr
         if user_ip not in user_uploads:
@@ -86,7 +93,7 @@ def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 if __name__ == '__main__':
-    os.makedirs('uploads', exist_ok=True) 
+    os.makedirs('uploads', exist_ok=True)
     link_to_filename = load_links()
-    user_uploads = load_user_uploads()
+    user_uploads = load_user_uploads() 
     app.run(host='0.0.0.0', port=5000, debug=True)
